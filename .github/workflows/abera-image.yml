@@ -1,0 +1,112 @@
+name: Abera Chatwoot CE image
+
+on:
+  push:
+    tags:
+      - "abera-v*"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: abera-chatwoot-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/tomatoes-prog/abera-chatwoot
+  UPSTREAM_BASE_SHA: 70e284a044f00326725f65f703162745371075ec
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04-arm
+    steps:
+      - name: Check out the immutable release source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify the Abera release contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$UPSTREAM_BASE_SHA" "$GITHUB_SHA"
+          case "$GITHUB_REF_NAME" in
+            abera-v*) ;;
+            *) echo "Release tags must start with abera-v." >&2; exit 1 ;;
+          esac
+
+      - name: Strip Enterprise code from the CE image
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf enterprise spec/enterprise
+          printf '\nENV CW_EDITION="ce"\n' >> docker/Dockerfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish the exact ARM64 source
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/tomatoes-prog/abera-chatwoot
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+            com.abera.upstream-base-sha=${{ env.UPSTREAM_BASE_SHA }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify the published image identity
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          reference="$IMAGE@$DIGEST"
+          docker pull --platform linux/arm64 "$reference"
+          test "$(docker run --rm --platform linux/arm64 \
+            --entrypoint cat "$reference" /app/.git_sha)" = "$GITHUB_SHA"
+          docker run --rm --platform linux/arm64 --entrypoint sh "$reference" \
+            -c 'test "$CW_EDITION" = "ce" && test -s /app/.git_sha'
+
+      - name: Record immutable release evidence
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-evidence
+          jq -n \
+            --arg image "$IMAGE@$DIGEST" \
+            --arg sourceSha "$GITHUB_SHA" \
+            --arg upstreamBaseSha "$UPSTREAM_BASE_SHA" \
+            --arg tag "$GITHUB_REF_NAME" \
+            '{schemaVersion:1,image:$image,sourceSha:$sourceSha,
+              upstreamBaseSha:$upstreamBaseSha,tag:$tag,platform:"linux/arm64"}' \
+            > release-evidence/image.json
+          cat release-evidence/image.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: abera-chatwoot-${{ github.ref_name }}
+          path: release-evidence/image.json
+          if-no-files-found: error
+          retention-days: 90
