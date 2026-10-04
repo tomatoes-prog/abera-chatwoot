@@ -84,7 +84,7 @@ class Integrations::Linear::AutoLinkService
   end
 
   def conversation_link
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{message.account_id}/conversations/#{message.conversation.display_id}"
+    "#{ChatwootApp.frontend_url(account: message.account)}/app/accounts/#{message.account_id}/conversations/#{message.conversation.display_id}"
   end
 
   def processor

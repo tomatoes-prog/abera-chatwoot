@@ -30,6 +30,30 @@
 # available at https://guides.rubyonrails.org/i18n.html.
 
 en:
+  abera:
+    activation:
+      title: Activate your account
+      description: Set up the administrator of your account.
+      email: Email
+      name: Name
+      password: Password
+      otp_code: Two-factor authentication code, if enabled
+      existing_user: Use your existing password if you already have an account.
+      login: Sign in
+      submit: Activate account
+      authentication_required: Authenticate with your existing password and two-factor code, if enabled.
+    smtp:
+      test_subject: Account email test
+      test_body: Your account SMTP configuration is working.
+      test_failed: Email could not be sent. Check your SMTP settings.
+    limits:
+      conversations: The limit of new conversations for this 31-day period has been reached.
+      agents: The account allows two agents, including the administrator.
+      messages: The account message rate limit has been reached. Try again in a minute.
+      file_size: Files must be 10 MiB or smaller.
+      storage: The account attachment storage limit has been reached.
+      suspended: The account is not available for processing.
+      pending_jobs: The account has too many pending operations. Try again later.
   hello: 'Hello world'
   inbox:
     reauthorization:

@@ -1,4 +1,4 @@
-json.access_token resource.accounts.any?(&:api_and_webhooks_enabled?) ? resource.access_token.token : ''
+json.access_token resource.visible_account_users.any? { |membership| membership.account.api_and_webhooks_enabled? } ? resource.access_token.token : ''
 json.account_id resource.active_account_user&.account_id
 json.available_name resource.available_name
 json.avatar_url resource.avatar_url
@@ -18,7 +18,7 @@ json.ui_settings resource.ui_settings
 json.uid resource.uid
 json.type resource.type
 json.accounts do
-  json.array! resource.account_users do |account_user|
+  json.array! resource.visible_account_users do |account_user|
     json.id account_user.account_id
     json.name account_user.account.name
     json.status account_user.account.status

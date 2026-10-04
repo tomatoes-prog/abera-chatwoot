@@ -26,7 +26,7 @@ class SlackUploadsController < ApplicationController
   end
 
   def avatar_url
-    base_url = ENV.fetch('FRONTEND_URL', nil)
+    base_url = ChatwootApp.frontend_url
     "#{base_url}/integrations/slack/#{params[:sender_type]}.png"
   end
 end

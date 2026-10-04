@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= t('abera.activation.title') %></title>
+    <%= csrf_meta_tags %>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag 'superadmin' %>
+  </head>
+  <body class="min-h-screen bg-slate-50 px-4 py-12 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <main class="mx-auto max-w-md rounded-lg bg-white p-8 shadow-sm dark:bg-slate-800">
+      <h1 class="text-2xl font-semibold"><%= t('abera.activation.title') %></h1>
+      <p class="mb-6 mt-2 text-sm text-slate-600 dark:text-slate-300"><%= t('abera.activation.description') %></p>
+      <% if @error %><p role="alert" class="mb-4 rounded border border-red-300 p-3 text-sm text-red-700"><%= @error %></p><% end %>
+      <%= form_with url: '/abera/activate', local: true, class: 'space-y-4' do |form| %>
+        <%= form.hidden_field :token, value: params[:token] %>
+        <p><%= form.label :email, t('abera.activation.email') %><%= form.email_field :email, required: true, value: Abera::Current.subscription.admin_email %></p>
+        <p><%= form.label :name, t('abera.activation.name') %><%= form.text_field :name, required: true %></p>
+        <p><%= form.label :password, t('abera.activation.password') %><%= form.password_field :password, minlength: 8 %></p>
+        <p><%= form.label :otp_code, t('abera.activation.otp_code') %><%= form.text_field :otp_code, autocomplete: 'one-time-code' %></p>
+        <p><%= t('abera.activation.existing_user') %> <%= link_to t('abera.activation.login'), '/app/login' %></p>
+        <%= form.submit t('abera.activation.submit'), class: 'w-full cursor-pointer rounded bg-woot-500 px-4 py-3 font-medium text-white' %>
+      <% end %>
+    </main>
+  </body>
+</html>

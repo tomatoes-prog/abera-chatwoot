@@ -29,7 +29,7 @@ class AdministratorNotifications::AccountNotificationMailer < AdministratorNotif
     action_url = if resource.failed_records.attached?
                    Rails.application.routes.url_helpers.rails_blob_url(resource.failed_records)
                  else
-                   "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{resource.account.id}/contacts"
+                   "#{ChatwootApp.frontend_url(account: resource.account)}/app/accounts/#{resource.account.id}/contacts"
                  end
 
     meta = {

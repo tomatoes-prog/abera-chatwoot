@@ -1,6 +1,6 @@
 json.website_channel_config do
   json.allow_messages_after_resolved @web_widget.inbox.allow_messages_after_resolved
-  json.api_host ENV.fetch('FRONTEND_URL', nil)
+  json.api_host ChatwootApp.frontend_url
   json.auth_token @token
   json.avatar_url @web_widget.inbox.avatar_url
   json.csat_survey_enabled @web_widget.inbox.csat_survey_enabled

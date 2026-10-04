@@ -1,0 +1,9 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+ENV BUNDLE_WITHOUT=development RAILS_ENV=test DISABLE_ENTERPRISE=true
+COPY Gemfile Gemfile.lock /app/
+RUN bundle config set without development && bundle install
+RUN rm -rf /app && mkdir /app
+COPY . /app/
+RUN rm -rf /app/enterprise /app/spec/enterprise && printf 'local-test\n' > /app/.git_sha

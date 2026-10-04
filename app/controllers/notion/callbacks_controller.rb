@@ -31,6 +31,6 @@ class Notion::CallbacksController < OauthCallbackController
   end
 
   def notion_redirect_uri
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{account.id}/settings/integrations/notion"
+    "#{ChatwootApp.frontend_url(account: account)}/app/accounts/#{account.id}/settings/integrations/notion"
   end
 end

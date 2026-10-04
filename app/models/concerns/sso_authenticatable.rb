@@ -17,7 +17,7 @@ module SsoAuthenticatable
 
   def generate_sso_link
     encoded_email = ERB::Util.url_encode(email)
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/login?email=#{encoded_email}&sso_auth_token=#{generate_sso_auth_token}"
+    "#{ChatwootApp.frontend_url}/app/login?email=#{encoded_email}&sso_auth_token=#{generate_sso_auth_token}"
   end
 
   def sso_auth_token_impersonation?(token)
@@ -26,8 +26,7 @@ module SsoAuthenticatable
 
   def generate_sso_link_with_impersonation
     encoded_email = ERB::Util.url_encode(email)
-    "#{ENV.fetch('FRONTEND_URL',
-                 nil)}/app/login?email=#{encoded_email}&sso_auth_token=#{generate_sso_auth_token(impersonation: true)}&impersonation=true"
+    "#{ChatwootApp.frontend_url}/app/login?email=#{encoded_email}&sso_auth_token=#{generate_sso_auth_token(impersonation: true)}&impersonation=true"
   end
 
   private

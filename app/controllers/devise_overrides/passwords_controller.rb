@@ -5,7 +5,9 @@ class DeviseOverrides::PasswordsController < Devise::PasswordsController
   skip_before_action :authenticate_user!, raise: false
 
   def create
+    Current.account = Abera::Current.subscription.account if Abera.enabled? && Abera::Current.subscription
     @user = User.from_email(params[:email])
+    @user = nil if Abera.enabled? && @user && !@user.accounts.exists?(id: Current.account&.id)
     @user&.send_reset_password_instructions
     build_response(I18n.t('messages.reset_password'), 200)
   end
@@ -15,6 +17,9 @@ class DeviseOverrides::PasswordsController < Devise::PasswordsController
     original_token = params[:reset_password_token]
     reset_password_token = Devise.token_generator.digest(self, :reset_password_token, original_token)
     @recoverable = User.find_by(reset_password_token: reset_password_token)
+    if Abera.enabled? && @recoverable && !@recoverable.accounts.exists?(id: Abera::Current.subscription&.account_id)
+      @recoverable = nil
+    end
     if @recoverable && reset_password_and_confirmation(@recoverable)
       send_auth_headers(@recoverable)
       render partial: 'devise/auth', formats: [:json], locals: { resource: @recoverable }

@@ -6,15 +6,16 @@ import { useAlert } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useConfig } from 'dashboard/composables/useConfig';
 import { useAccount } from 'dashboard/composables/useAccount';
-import { FEATURE_FLAGS } from '../../../../featureFlags';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import NextInput from 'next/input/Input.vue';
-import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
+import { FEATURE_FLAGS } from '../../../../featureFlags';
 import AccountId from './components/AccountId.vue';
 import BuildInfo from './components/BuildInfo.vue';
 import AccountDelete from './components/AccountDelete.vue';
 import AudioTranscription from './components/AudioTranscription.vue';
+import AberaSmtp from './components/AberaSmtp.vue';
 import SectionLayout from './components/SectionLayout.vue';
 
 export default {
@@ -25,6 +26,7 @@ export default {
     BuildInfo,
     AccountDelete,
     AudioTranscription,
+    AberaSmtp,
     SectionLayout,
     WithLabel,
     NextInput,
@@ -95,7 +97,7 @@ export default {
     },
   },
   watch: {
-    'currentAccount.id'(id) {
+    'currentAccount.id': function (id) {
       if (id) {
         this.initializeAccount();
       }
@@ -249,6 +251,7 @@ export default {
     </div>
     <AudioTranscription v-if="showAudioTranscriptionConfig" />
     <AccountId />
+    <AberaSmtp />
     <div v-if="!uiFlags.isFetchingItem && isOnChatwootCloud">
       <AccountDelete />
     </div>

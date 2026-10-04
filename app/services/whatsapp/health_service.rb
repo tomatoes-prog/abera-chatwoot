@@ -167,7 +167,7 @@ class Whatsapp::HealthService
   end
 
   def build_expected_webhook_url
-    frontend_url = ENV.fetch('FRONTEND_URL', nil)
+    frontend_url = ChatwootApp.frontend_url(account: @channel.account)
     return nil if frontend_url.blank?
 
     "#{frontend_url}/webhooks/whatsapp/#{@channel.phone_number}"

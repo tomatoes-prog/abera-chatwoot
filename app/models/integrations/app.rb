@@ -98,11 +98,11 @@ class Integrations::App
   end
 
   def self.slack_integration_url
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/settings/integrations/slack"
+    "#{ChatwootApp.frontend_url}/app/accounts/#{Current.account.id}/settings/integrations/slack"
   end
 
   def self.linear_integration_url
-    "#{ENV.fetch('FRONTEND_URL', nil)}/linear/callback"
+    "#{ChatwootApp.frontend_url}/linear/callback"
   end
 
   class << self

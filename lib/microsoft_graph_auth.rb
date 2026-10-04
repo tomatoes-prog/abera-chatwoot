@@ -50,6 +50,6 @@ class MicrosoftGraphAuth < OmniAuth::Strategies::OAuth2
   # query parameters. Azure fails validation because that doesn't match the
   # registered callback.
   def callback_url
-    ENV.fetch('FRONTEND_URL', nil) + app_path
+    ChatwootApp.frontend_url + app_path
   end
 end

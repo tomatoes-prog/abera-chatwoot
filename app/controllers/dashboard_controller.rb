@@ -58,7 +58,7 @@ class DashboardController < ActionController::Base
 
   def render_hc_if_custom_domain
     domain = request.host
-    return if domain == URI.parse(ENV.fetch('FRONTEND_URL', '')).host
+    return if domain == URI.parse(ChatwootApp.frontend_url(default: '')).host
 
     @portal = Portal.find_by(custom_domain: domain)
     return unless @portal

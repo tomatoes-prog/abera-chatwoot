@@ -65,7 +65,7 @@ class DeviseOverrides::SessionsController < DeviseTokenAuth::SessionsController
   end
 
   def login_page_url(error: nil)
-    frontend_url = ENV.fetch('FRONTEND_URL', nil)
+    frontend_url = ChatwootApp.frontend_url
 
     "#{frontend_url}/app/login?error=#{error}"
   end

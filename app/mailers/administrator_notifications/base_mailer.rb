@@ -11,12 +11,12 @@ class AdministratorNotifications::BaseMailer < ApplicationMailer
 
   # Helper method to generate inbox URL
   def inbox_url(inbox)
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/settings/inboxes/#{inbox.id}"
+    "#{ChatwootApp.frontend_url}/app/accounts/#{Current.account.id}/settings/inboxes/#{inbox.id}"
   end
 
   # Helper method to generate settings URL
   def settings_url(section)
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/settings/#{section}"
+    "#{ChatwootApp.frontend_url}/app/accounts/#{Current.account.id}/settings/#{section}"
   end
 
   private

@@ -1,6 +1,7 @@
 module.exports = {
+  root: true,
   extends: [
-    'airbnb-base/legacy',
+    'airbnb-base',
     'prettier',
     'plugin:vue/vue3-recommended',
     'plugin:vitest-globals/recommended',

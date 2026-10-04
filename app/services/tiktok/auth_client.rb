@@ -139,7 +139,7 @@ class Tiktok::AuthClient
     end
 
     def base_url
-      ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
+      ChatwootApp.frontend_url(default: 'http://localhost:3000')
     end
 
     def api_base_url

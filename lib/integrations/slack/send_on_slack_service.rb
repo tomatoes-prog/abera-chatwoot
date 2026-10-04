@@ -95,7 +95,7 @@ class Integrations::Slack::SendOnSlackService < Base::SendOnChannelService
   end
 
   def generate_url(sender_type, blob_key)
-    base_url = ENV.fetch('FRONTEND_URL', nil)
+    base_url = ChatwootApp.frontend_url(account: message.account)
     "#{base_url}/slack_uploads?blob_key=#{blob_key}&sender_type=#{sender_type}"
   end
 
@@ -202,7 +202,7 @@ class Integrations::Slack::SendOnSlackService < Base::SendOnChannelService
   end
 
   def link_to_conversation
-    "<#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{conversation.account_id}/conversations/#{conversation.display_id}|Click here>"
+    "<#{ChatwootApp.frontend_url(account: message.account)}/app/accounts/#{conversation.account_id}/conversations/#{conversation.display_id}|Click here>"
   end
 
   # Determines whether the conversation identifier should be updated with the ts value.

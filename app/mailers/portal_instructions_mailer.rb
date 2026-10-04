@@ -24,7 +24,7 @@ class PortalInstructionsMailer < ApplicationMailer
 
   def target_domain
     helpcenter_url = ENV.fetch('HELPCENTER_URL', '')
-    frontend_url = ENV.fetch('FRONTEND_URL', '')
+    frontend_url = ChatwootApp.frontend_url(default: '')
 
     return extract_hostname(helpcenter_url) if helpcenter_url.present?
     return extract_hostname(frontend_url) if frontend_url.present?

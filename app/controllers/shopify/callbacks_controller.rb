@@ -61,12 +61,12 @@ class Shopify::CallbacksController < ApplicationController
   end
 
   def shopify_integration_url
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{account.id}/settings/integrations/shopify"
+    "#{ChatwootApp.frontend_url(account: account)}/app/accounts/#{account.id}/settings/integrations/shopify"
   end
 
   def redirect_uri
     return shopify_integration_url if account
 
-    ENV.fetch('FRONTEND_URL', nil)
+    ChatwootApp.frontend_url(account: account)
   end
 end

@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get '/abera/activate', to: 'abera/activations#show'
+  post '/abera/activate', to: 'abera/activations#create'
   # AUTH STARTS
   mount_devise_token_auth_for 'User', at: 'auth', controllers: {
     confirmations: 'devise_overrides/confirmations',
@@ -51,6 +53,10 @@ Rails.application.routes.draw do
         end
 
         scope module: :accounts do
+          resource :abera_smtp_settings, only: [:show, :update] do
+            post :test
+            get :test_status
+          end
           namespace :actions do
             resource :contact_merge, only: [:create]
           end
