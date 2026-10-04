@@ -89,7 +89,7 @@ class Whatsapp::WebhookSetupService
   end
 
   def build_callback_url
-    frontend_url = ENV.fetch('FRONTEND_URL', nil)
+    frontend_url = ChatwootApp.frontend_url(account: @channel.account)
     phone_number = @channel.phone_number
 
     "#{frontend_url}/webhooks/whatsapp/#{phone_number}"

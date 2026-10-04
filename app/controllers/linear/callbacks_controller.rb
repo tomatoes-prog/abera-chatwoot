@@ -59,7 +59,7 @@ class Linear::CallbacksController < ApplicationController
   end
 
   def linear_redirect_uri
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{account.id}/settings/integrations/linear"
+    "#{ChatwootApp.frontend_url(account: account)}/app/accounts/#{account.id}/settings/integrations/linear"
   end
 
   def safe_linear_redirect_uri
@@ -95,6 +95,6 @@ class Linear::CallbacksController < ApplicationController
   end
 
   def base_url
-    ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
+    ChatwootApp.frontend_url(default: 'http://localhost:3000')
   end
 end

@@ -47,6 +47,6 @@ class AdministratorNotifications::AccountComplianceMailer < AdministratorNotific
   end
 
   def instance_url
-    ENV.fetch('FRONTEND_URL', 'not available')
+    ChatwootApp.frontend_url(default: 'not available')
   end
 end

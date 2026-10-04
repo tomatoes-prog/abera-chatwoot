@@ -42,7 +42,7 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
   private
 
   def redirect_uri
-    "#{ENV.fetch('FRONTEND_URL', '')}/shopify/callback"
+    "#{ChatwootApp.frontend_url(default: '')}/shopify/callback"
   end
 
   def contact

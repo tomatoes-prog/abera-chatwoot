@@ -1,6 +1,7 @@
 # pre-build stage
 FROM node:24-alpine as node
 FROM ruby:3.4.4-alpine3.21 AS pre-builder
+ENV CW_EDITION=ce DISABLE_ENTERPRISE=true
 
 ARG NODE_VERSION="24.13.0"
 ARG PNPM_VERSION="10.2.0"
@@ -30,7 +31,7 @@ RUN apk update && apk add --no-cache \
   build-base \
   tzdata \
   postgresql-dev \
-  postgresql-client \
+  postgresql16-client \
   git \
   curl \
   xz \
@@ -72,9 +73,10 @@ RUN if [ "$RAILS_ENV" = "production" ]; then \
   fi
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm i
+RUN pnpm install --frozen-lockfile
 
 COPY . /app
+RUN rm -rf /app/enterprise /app/spec/enterprise
 
 # creating a log directory so that image wont fail when RAILS_LOG_TO_STDOUT is false
 # https://github.com/chatwoot/chatwoot/issues/701
@@ -87,7 +89,8 @@ RUN if [ "$RAILS_ENV" = "production" ]; then \
   fi
 
 # Generate .git_sha file with current commit hash
-RUN git rev-parse HEAD > /app/.git_sha
+ARG SOURCE_SHA
+RUN test -n "$SOURCE_SHA" && echo "$SOURCE_SHA" | grep -Eq '^[a-f0-9]{40}$' && printf '%s\n' "$SOURCE_SHA" > /app/.git_sha
 
 # Remove unnecessary files
 RUN rm -rf /gems/ruby/3.4.0/cache/*.gem \
@@ -97,6 +100,7 @@ RUN rm -rf /gems/ruby/3.4.0/cache/*.gem \
 
 # final build stage
 FROM ruby:3.4.4-alpine3.21
+ENV CW_EDITION=ce DISABLE_ENTERPRISE=true
 
 ARG NODE_VERSION="24.13.0"
 ARG PNPM_VERSION="10.2.0"
@@ -124,7 +128,7 @@ RUN apk update && apk add --no-cache \
   build-base \
   openssl \
   tzdata \
-  postgresql-client \
+  postgresql16-client \
   imagemagick \
   git \
   vips \
@@ -148,5 +152,11 @@ COPY --from=pre-builder /app /app
 COPY --from=pre-builder /app/.git_sha /app/.git_sha
 
 WORKDIR /app
+
+RUN addgroup -g 1000 chatwoot \
+  && adduser -D -u 1000 -G chatwoot chatwoot \
+  && chown -R chatwoot:chatwoot /app
+
+USER 1000:1000
 
 EXPOSE 3000

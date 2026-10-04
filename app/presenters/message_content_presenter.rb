@@ -28,6 +28,6 @@ class MessageContentPresenter < SimpleDelegator
   end
 
   def survey_url(conversation_uuid)
-    "#{ENV.fetch('FRONTEND_URL', nil)}/survey/responses/#{conversation_uuid}"
+    "#{ChatwootApp.frontend_url(account: conversation.account)}/survey/responses/#{conversation_uuid}"
   end
 end

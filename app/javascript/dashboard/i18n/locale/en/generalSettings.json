@@ -1,5 +1,20 @@
 {
   "GENERAL_SETTINGS": {
+    "SMTP": {
+      "TITLE": "Account email",
+      "DESCRIPTION": "Configure your SMTP server for invitations, password recovery and account notifications. Receiving email uses separate IMAP settings.",
+      "PENDING": "Email setup is pending. Account emails cannot be sent until SMTP is configured.",
+      "FIELDS": { "ADDRESS": "SMTP server", "PORT": "Port", "USERNAME": "Username", "PASSWORD": "Password", "SENDER": "Sender email", "SECURITY": "Transport security", "AUTHENTICATION": "Authentication" },
+      "AUTH": { "LOGIN": "LOGIN", "PLAIN": "PLAIN", "CRAM_MD5": "CRAM-MD5" },
+      "STARTTLS": "STARTTLS (required)",
+      "TLS": "TLS",
+      "SAVE": "Save SMTP settings",
+      "TEST": "Send a test to my email",
+      "SAVED": "SMTP settings saved",
+      "TEST_SUCCESS": "Test email sent",
+      "TEST_PENDING": "The test is still queued. Check your mailbox shortly.",
+      "ERROR": "Could not configure account email. Check the settings and try again."
+    },
     "LIMIT_MESSAGES": {
       "CONVERSATION": "You have exceeded the conversation limit. Hacker plan allows only 500 conversations.",
       "INBOXES": "You have exceeded the inbox limit. Hacker plan only supports website live-chat. Additional inboxes like email, WhatsApp etc. require a paid plan.",

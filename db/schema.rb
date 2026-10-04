@@ -10,13 +10,90 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_18_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_02_000000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
   enable_extension "vector"
+
+  create_table "abera_durable_jobs", force: :cascade do |t|
+    t.bigint "abera_subscription_id", null: false
+    t.string "job_class", null: false
+    t.string "deduplication_key", null: false
+    t.jsonb "arguments", null: false
+    t.string "state", default: "pending", null: false
+    t.string "lease_owner"
+    t.datetime "lease_until"
+    t.datetime "available_at", null: false
+    t.datetime "completed_at"
+    t.integer "attempts", default: 0, null: false
+    t.text "last_error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["abera_subscription_id", "deduplication_key"], name: "index_abera_durable_deduplication", unique: true
+    t.index ["abera_subscription_id"], name: "index_abera_durable_jobs_on_abera_subscription_id"
+    t.index ["state", "available_at"], name: "index_abera_durable_jobs_on_state_and_available_at"
+  end
+
+  create_table "abera_operation_receipts", force: :cascade do |t|
+    t.string "operation_id", null: false
+    t.string "subscription_id", null: false
+    t.string "action", null: false
+    t.jsonb "result", null: false
+    t.text "credentials"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["operation_id", "action"], name: "index_abera_operation_receipts_on_operation_id_and_action", unique: true
+  end
+
+  create_table "abera_smtp_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "address", null: false
+    t.integer "port", default: 587, null: false
+    t.string "username", null: false
+    t.text "password", null: false
+    t.string "sender", null: false
+    t.string "authentication", default: "login", null: false
+    t.string "security", default: "starttls", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_abera_smtp_settings_on_account_id", unique: true
+  end
+
+  create_table "abera_subscriptions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "subscription_id", null: false
+    t.string "customer_id", null: false
+    t.string "service_host", null: false
+    t.string "tier", null: false
+    t.string "state", default: "pending", null: false
+    t.string "activation_token_digest"
+    t.string "admin_email"
+    t.datetime "activated_at"
+    t.datetime "activation_consumed_at"
+    t.integer "agent_limit", default: 2, null: false
+    t.integer "conversation_limit", default: 500, null: false
+    t.bigint "storage_limit_bytes", default: 2147483648, null: false
+    t.bigint "storage_reserved_bytes", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_abera_subscriptions_on_account_id", unique: true
+    t.index ["activation_token_digest"], name: "index_abera_subscriptions_on_activation_token_digest", unique: true
+    t.index ["service_host"], name: "index_abera_subscriptions_on_service_host", unique: true
+    t.index ["subscription_id"], name: "index_abera_subscriptions_on_subscription_id", unique: true
+  end
+
+  create_table "abera_usage_windows", force: :cascade do |t|
+    t.bigint "abera_subscription_id", null: false
+    t.datetime "starts_at", null: false
+    t.integer "conversations", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["abera_subscription_id", "starts_at"], name: "index_abera_usage_window", unique: true
+    t.index ["abera_subscription_id"], name: "index_abera_usage_windows_on_abera_subscription_id"
+  end
 
   create_table "access_tokens", force: :cascade do |t|
     t.string "owner_type"
@@ -446,8 +523,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_18_000000) do
     t.integer "status", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_captain_faq_suggestions_on_account_id"
     t.index ["account_id", "assistant_id", "status", "language"], name: "idx_cap_faq_suggestions_on_account_assistant_status_language"
+    t.index ["account_id"], name: "index_captain_faq_suggestions_on_account_id"
     t.index ["assistant_id"], name: "index_captain_faq_suggestions_on_assistant_id"
     t.index ["embedding"], name: "vector_idx_captain_faq_suggestions_embedding", opclass: :vector_cosine_ops, using: :ivfflat
   end
@@ -686,8 +763,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_18_000000) do
     t.jsonb "phone_number_health", default: {}, null: false
     t.datetime "phone_number_health_checked_at"
     t.string "phone_number_health_error", limit: 500
-    t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
     t.index ["phone_number"], name: "index_channel_whatsapp_on_phone_number", unique: true
+    t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
   end
 
   create_table "companies", force: :cascade do |t|
@@ -992,10 +1069,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_18_000000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "inbox_id"
-    t.index ["account_id", "name", "template_type", "locale"], name: "index_email_templates_on_account_scope", unique: true, where: "(account_id IS NOT NULL) AND (inbox_id IS NULL)"
+    t.index ["account_id", "name", "template_type", "locale"], name: "index_email_templates_on_account_scope", unique: true, where: "((account_id IS NOT NULL) AND (inbox_id IS NULL))"
     t.index ["inbox_id", "name", "template_type", "locale"], name: "index_email_templates_on_inbox_scope", unique: true, where: "(inbox_id IS NOT NULL)"
     t.index ["inbox_id"], name: "index_email_templates_on_inbox_id"
-    t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "(account_id IS NULL) AND (inbox_id IS NULL)"
+    t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "((account_id IS NULL) AND (inbox_id IS NULL))"
   end
 
   create_table "folders", force: :cascade do |t|
@@ -1498,6 +1575,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_18_000000) do
     t.index ["inbox_id"], name: "index_working_hours_on_inbox_id"
   end
 
+  add_foreign_key "abera_durable_jobs", "abera_subscriptions"
+  add_foreign_key "abera_smtp_settings", "accounts"
+  add_foreign_key "abera_subscriptions", "accounts"
+  add_foreign_key "abera_usage_windows", "abera_subscriptions"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "inboxes", "portals"

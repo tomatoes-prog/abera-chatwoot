@@ -8,7 +8,7 @@ module TwitterConcern
   end
 
   def host
-    ENV.fetch('FRONTEND_URL', '')
+    ChatwootApp.frontend_url(default: '')
   end
 
   def twitter_client

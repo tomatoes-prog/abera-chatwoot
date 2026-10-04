@@ -42,7 +42,6 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf enterprise spec/enterprise
-          printf '\nENV CW_EDITION="ce"\n' >> docker/Dockerfile
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -61,6 +60,8 @@ jobs:
           context: .
           file: docker/Dockerfile
           platforms: linux/arm64
+          build-args: |
+            SOURCE_SHA=${{ github.sha }}
           push: true
           tags: ${{ env.IMAGE }}:${{ github.ref_name }}
           labels: |
@@ -84,7 +85,7 @@ jobs:
           test "$(docker run --rm --platform linux/arm64 \
             --entrypoint cat "$reference" /app/.git_sha)" = "$GITHUB_SHA"
           docker run --rm --platform linux/arm64 --entrypoint sh "$reference" \
-            -c 'test "$CW_EDITION" = "ce" && test -s /app/.git_sha'
+            -c 'test "$CW_EDITION" = "ce" && test "$DISABLE_ENTERPRISE" = "true" && test "$(id -u)" = "1000" && test -s /app/.git_sha && test -s /app/LICENSE && test ! -d /app/enterprise && test ! -d /app/spec/enterprise'
 
       - name: Record immutable release evidence
         env:

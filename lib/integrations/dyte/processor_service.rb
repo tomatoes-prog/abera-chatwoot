@@ -61,7 +61,7 @@ class Integrations::Dyte::ProcessorService
   def avatar_url(user)
     return user.avatar_url if user.avatar_url.present?
 
-    "#{ENV.fetch('FRONTEND_URL', nil)}/integrations/slack/user.png"
+    "#{ChatwootApp.frontend_url}/integrations/slack/user.png"
   end
 
   def dyte_hook

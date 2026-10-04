@@ -63,7 +63,7 @@ class CsatTemplateManagementService
     {
       message: template_params[:message],
       button_text: template_params[:button_text] || DEFAULT_BUTTON_TEXT,
-      base_url: ENV.fetch('FRONTEND_URL', 'http://localhost:3000'),
+      base_url: ChatwootApp.frontend_url(account: @inbox.account, default: 'http://localhost:3000'),
       language: template_params[:language] || DEFAULT_LANGUAGE,
       template_name: CsatTemplateNameService.csat_template_name(@inbox.id)
     }

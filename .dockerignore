@@ -1,4 +1,7 @@
 .bundle
+.git
+.codex
+.worktrees
 .env
 .env.*
 docker-compose.*

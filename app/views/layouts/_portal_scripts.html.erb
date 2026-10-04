@@ -80,7 +80,7 @@ html.light {
     portalColor: '<%= @portal.color %>',
     theme: '<%= @theme_from_params %>',
     customDomain: '<%= @portal.custom_domain %>',
-    hostURL: '<%= ENV.fetch('FRONTEND_URL', '') %>',
+    hostURL: '<%= ChatwootApp.frontend_url(default: '') %>',
     localeCode: '<%= @locale %>',
     searchTranslations: {
       searchPlaceholder: '<%= I18n.t('public_portal.search.search_placeholder') %>',

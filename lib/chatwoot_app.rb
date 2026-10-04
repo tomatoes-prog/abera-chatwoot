@@ -29,6 +29,11 @@ module ChatwootApp
     @custom ||= root.join('custom').exist?
   end
 
+  def self.frontend_url(account: Current.account, default: nil)
+    resolver = Rails.application.config.x[:account_frontend_url_resolver]
+    resolver ? resolver.call(account) : ENV.fetch('FRONTEND_URL', default)
+  end
+
   def self.help_center_root
     ENV.fetch('HELPCENTER_URL', nil) || ENV.fetch('FRONTEND_URL', nil)
   end

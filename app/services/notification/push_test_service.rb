@@ -94,13 +94,13 @@ class Notification::PushTestService
       message: JSON.generate(
         title: resolved_title,
         tag: "super_admin_test_#{Time.zone.now.to_i}",
-        url: ENV.fetch('FRONTEND_URL', 'https://app.chatwoot.com')
+        url: ChatwootApp.frontend_url(default: 'https://app.chatwoot.com')
       ),
       endpoint: subscription.subscription_attributes['endpoint'],
       p256dh: subscription.subscription_attributes['p256dh'],
       auth: subscription.subscription_attributes['auth'],
       vapid: {
-        subject: ENV.fetch('FRONTEND_URL', 'https://app.chatwoot.com'),
+        subject: ChatwootApp.frontend_url(default: 'https://app.chatwoot.com'),
         public_key: VapidService.public_key,
         private_key: VapidService.private_key
       },
