@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   deployment_check:
+    # Review apps belong to upstream; Abera deploys through AWS.
+    if: github.repository == 'chatwoot/chatwoot'
     name: Check Deployment
     runs-on: ubuntu-latest
     steps:
