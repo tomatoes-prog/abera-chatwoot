@@ -95,6 +95,6 @@ class Linear::CallbacksController < ApplicationController
   end
 
   def base_url
-    ChatwootApp.frontend_url(account: account, default: 'http://localhost:3000')
+    ChatwootApp.frontend_url(default: 'http://localhost:3000')
   end
 end

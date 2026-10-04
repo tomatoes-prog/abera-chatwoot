@@ -14,15 +14,19 @@ RSpec.describe Abera::BlobAccess do
   end
 
   it 'allows the shared profile avatar only while its user belongs to this account' do
-    ActiveStorage::Attachment.create!(name: 'avatar', record: user, blob: blob)
+    with_modified_env(ABERA_MANAGED: 'false') do
+      ActiveStorage::Attachment.create!(name: 'avatar', record: user, blob: blob)
+    end
     expect(described_class.allowed?(blob, subscription)).to be(true)
     AccountUser.where(account: account, user: user).delete_all
     expect(described_class.allowed?(blob, subscription)).to be(false)
   end
 
   it 'rejects an image that is also an attachment to account content' do
-    ActiveStorage::Attachment.create!(name: 'avatar', record: user, blob: blob)
-    ActiveStorage::Attachment.create!(name: 'avatar', record: create(:contact, account: neighbor), blob: blob)
+    with_modified_env(ABERA_MANAGED: 'false') do
+      ActiveStorage::Attachment.create!(name: 'avatar', record: user, blob: blob)
+      ActiveStorage::Attachment.create!(name: 'avatar', record: create(:contact, account: neighbor), blob: blob)
+    end
     expect(described_class.allowed?(blob, subscription)).to be(false)
   end
 end

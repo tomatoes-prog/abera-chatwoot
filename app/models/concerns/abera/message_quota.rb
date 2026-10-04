@@ -8,8 +8,10 @@ module Abera::MessageQuota
   private
 
   def abera_check_message_rate
+    return unless Abera.enabled? && account && !Abera::Current.administrative_operation
+
     subscription = account.abera_subscription
-    return unless Abera.enabled? && subscription && !Abera::Current.administrative_operation
+    return unless subscription
 
     errors.add(:base, I18n.t('abera.limits.messages')) unless Abera::RateLimit.allowed?(subscription, 'messages', 60)
   end

@@ -3,6 +3,13 @@ RSpec.configure do |config|
     metadata[:abera_managed] = true
   end
 
+  config.before(:each, :abera_managed) do
+    @abera_test_redis = Redis.new(Redis::Config.app)
+    allow(Redis::Alfred).to receive(:with).and_yield(@abera_test_redis)
+  end
+
+  config.after(:each, :abera_managed) { @abera_test_redis.close }
+
   config.around(:each, :abera_managed) do |example|
     original_resolver = Rails.application.config.x[:account_frontend_url_resolver]
     Rails.application.config.x[:account_frontend_url_resolver] = lambda do |account|

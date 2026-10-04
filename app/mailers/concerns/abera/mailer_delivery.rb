@@ -1,9 +1,9 @@
 module Abera::MailerDelivery
-  def process(action, *args)
+  def process(action, *args, **kwargs)
     previous_account = Current.account
     return super unless Abera.enabled?
 
-    @abera_mail_account = Abera::AccountContext.resolve([params, args]) || Current.account
+    @abera_mail_account = Abera::AccountContext.resolve([params, args, kwargs]) || Current.account
     raise 'Account context is required for managed email' unless @abera_mail_account&.abera_subscription
 
     Current.account = @abera_mail_account
