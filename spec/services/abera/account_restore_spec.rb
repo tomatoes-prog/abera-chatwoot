@@ -71,8 +71,8 @@ RSpec.describe Abera::AccountRestore do
   end
 
   it 'rolls back account removal and import when restoring the graph fails', :aggregate_failures do
-    allow(Abera::AccountImport).to receive(:new).and_wrap_original do |constructor, *arguments|
-      constructor.call(*arguments).tap do |importer|
+    allow(Abera::AccountImport).to receive(:new).and_wrap_original do |constructor, *arguments, **options|
+      constructor.call(*arguments, **options).tap do |importer|
         allow(importer).to receive(:restore!).and_wrap_original do |restore|
           restore.call
           raise 'Import verification failed'
