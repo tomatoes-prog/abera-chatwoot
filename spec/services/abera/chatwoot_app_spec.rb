@@ -6,9 +6,9 @@ RSpec.describe ChatwootApp do
 
   before do
     Abera::Subscription.create!(account: account, subscription_id: 'url-one', customer_id: 'owner-one',
-                               service_host: 'one.example.test', tier: 'essential', state: 'active')
+                                service_host: 'one.example.test', tier: 'essential', state: 'active')
     Abera::Subscription.create!(account: neighbor, subscription_id: 'url-two', customer_id: 'owner-two',
-                               service_host: 'two.example.test', tier: 'essential', state: 'active')
+                                service_host: 'two.example.test', tier: 'essential', state: 'active')
   end
 
   after { Current.reset }

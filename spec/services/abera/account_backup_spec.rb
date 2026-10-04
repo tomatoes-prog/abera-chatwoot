@@ -2,9 +2,9 @@ require 'rails_helper'
 
 RSpec.describe Abera::AccountBackup do
   let(:account) { create(:account) }
-  let!(:subscription) do
+  let(:subscription) do
     Abera::Subscription.create!(account: account, subscription_id: 'backup-one', customer_id: 'owner-one',
-                               service_host: 'backup.example.test', tier: 'lite', state: 'active')
+                                service_host: 'backup.example.test', tier: 'lite', state: 'active')
   end
   let(:client) { Aws::S3::Client.new(stub_responses: true, region: 'us-east-2') }
   let(:command) do
@@ -13,14 +13,16 @@ RSpec.describe Abera::AccountBackup do
   end
   let(:manifest) do
     command.except(:backupClass).stringify_keys.merge('version' => 1, 'productId' => 'abera-chatwoot',
-                                                     'accountId' => '123456789012', 'region' => 'us-east-2',
-                                                     'verified' => true, 'restoreTested' => true)
+                                                      'accountId' => '123456789012', 'region' => 'us-east-2',
+                                                      'verified' => true, 'restoreTested' => true)
   end
 
   around do |example|
     with_modified_env(ABERA_OPERATION_BUCKET: 'private-backups', S3_BUCKET_NAME: 'private-attachments',
                       ABERA_DATA_KEY_ARN: 'arn:aws:kms:us-east-2:123456789012:key/test-key') { example.run }
   end
+
+  before { subscription }
 
   it 'reuses the exact verified manifest version on retry without rewriting data' do
     body = JSON.generate(manifest)

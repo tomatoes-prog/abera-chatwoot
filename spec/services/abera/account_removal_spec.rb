@@ -19,7 +19,7 @@ RSpec.describe Abera::AccountRemoval do
 
   around { |example| with_modified_env(ABERA_MANAGED: 'true') { example.run } }
 
-  it 'removes just the account graph and retries from its durable receipt' do
+  it 'removes just the account graph and retries from its durable receipt', :aggregate_failures do
     api_token = user.access_token.token
     result = Abera::Administration.new(command).run
     expect(result.fetch('state')).to eq('absent')
@@ -33,21 +33,21 @@ RSpec.describe Abera::AccountRemoval do
     expect(Abera::Administration.new(command).run).to eq(result)
   end
 
-  it 'rejects a foreign owner after deletion without disclosing the receipt' do
+  it 'rejects a foreign owner after deletion without disclosing the receipt', :aggregate_failures do
     Abera::Administration.new(command).run
     expect do
       Abera::Administration.new(command.merge('customerId' => 'foreign')).run
     end.to raise_error(RuntimeError, 'Subscription owner mismatch')
   end
 
-  it 'refuses deletion while the account still accepts writes' do
+  it 'refuses deletion while the account still accepts writes', :aggregate_failures do
     subscription.update!(state: 'active')
     expect { Abera::Administration.new(command).run }.to raise_error(RuntimeError, 'Account must be quiesced before removal')
     expect(account.reload.conversations).to include(conversation)
     expect(Abera::OperationReceipt.exists?(operation_id: 'drop-one')).to be(false)
   end
 
-  it 'lets an operator retry cleanup using a new operation after the account is absent' do
+  it 'lets an operator retry cleanup using a new operation after the account is absent', :aggregate_failures do
     result = Abera::Administration.new(command).run
     retry_result = Abera::Administration.new(command.merge('operationId' => 'drop-retry')).run
     expect(retry_result.except('credentials')).to eq(result.except('credentials'))
@@ -55,7 +55,7 @@ RSpec.describe Abera::AccountRemoval do
     expect(neighbor.reload.conversations).to include(neighbor_conversation)
   end
 
-  it 'rejects an old deletion command after the subscription is recreated' do
+  it 'rejects an old deletion command after the subscription is recreated', :aggregate_failures do
     original_command = command.dup
     Abera::Administration.new(original_command).run
     recreated = create(:account)

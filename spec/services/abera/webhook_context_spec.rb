@@ -5,12 +5,14 @@ RSpec.describe Abera::WebhookContext do
   let(:neighbor) { create(:account) }
   let!(:subscription) do
     Abera::Subscription.create!(account: account, subscription_id: 'webhook-one', customer_id: 'owner-one',
-                               service_host: 'webhook.example.test', tier: 'essential', state: 'active')
+                                service_host: 'webhook.example.test', tier: 'essential', state: 'active')
   end
-  let!(:neighbor_subscription) do
+  let(:neighbor_subscription) do
     Abera::Subscription.create!(account: neighbor, subscription_id: 'webhook-two', customer_id: 'owner-two',
-                               service_host: 'neighbor.example.test', tier: 'essential', state: 'active')
+                                service_host: 'neighbor.example.test', tier: 'essential', state: 'active')
   end
+
+  before { neighbor_subscription }
 
   after do
     Abera::Current.reset
@@ -42,14 +44,15 @@ RSpec.describe Abera::WebhookContext do
   it 'checks every WhatsApp change and rejects a batch spanning two accounts' do
     payload = { object: 'whatsapp_business_account', entry: [{ changes: [{ value: {} }, { value: {} }] }] }
     job = Webhooks::WhatsappEventsJob.new(payload)
-    allow(job).to receive(:find_channel_from_whatsapp_business_payload).and_return(double(account: account), double(account: neighbor))
+    allow(job).to receive(:find_channel_from_whatsapp_business_payload)
+      .and_return(instance_double(Channel::Whatsapp, account: account), instance_double(Channel::Whatsapp, account: neighbor))
     expect { described_class.account(job) }.to raise_error(ActiveRecord::RecordNotFound)
   end
 
   it 'rejects a WhatsApp batch when any channel cannot be resolved' do
     payload = { object: 'whatsapp_business_account', entry: [{ changes: [{ value: {} }, { value: {} }] }] }
     job = Webhooks::WhatsappEventsJob.new(payload)
-    allow(job).to receive(:find_channel_from_whatsapp_business_payload).and_return(double(account: account), nil)
+    allow(job).to receive(:find_channel_from_whatsapp_business_payload).and_return(instance_double(Channel::Whatsapp, account: account), nil)
     expect { described_class.account(job) }.to raise_error(ActiveRecord::RecordNotFound)
   end
 end

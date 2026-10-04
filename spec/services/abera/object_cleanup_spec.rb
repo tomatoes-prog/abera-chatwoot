@@ -13,7 +13,8 @@ RSpec.describe Abera::ObjectCleanup do
     requests = storage.api_requests.select { |request| request[:operation_name] == :delete_objects }
     expect(requests.size).to eq(1)
     expect(requests.first.fetch(:params)).to include(bucket: 'private-files',
-                                               delete: { objects: [{ key: 'own-key', version_id: 'one' }, { key: 'own-key', version_id: 'marker' }] })
+                                                     delete: { objects: [{ key: 'own-key', version_id: 'one' },
+                                                                         { key: 'own-key', version_id: 'marker' }] })
   end
 
   it 'fails explicitly so the durable removal receipt can retry file cleanup' do

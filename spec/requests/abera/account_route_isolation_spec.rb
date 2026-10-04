@@ -10,9 +10,9 @@ RSpec.describe Abera::AccountRouteIsolation do
     # Native test mode uses MockRedis, which cannot execute the atomic Lua quota.
     allow(Redis::Alfred).to receive(:with).and_yield(rate_limit_redis)
     Abera::Subscription.create!(account: account, subscription_id: 'route-one', customer_id: 'owner-one',
-                               service_host: 'one.example.test', tier: 'essential', state: 'active')
+                                service_host: 'one.example.test', tier: 'essential', state: 'active')
     Abera::Subscription.create!(account: neighbor, subscription_id: 'route-two', customer_id: 'owner-two',
-                               service_host: 'two.example.test', tier: 'essential', state: 'active')
+                                service_host: 'two.example.test', tier: 'essential', state: 'active')
     AccountUser.create!(account: neighbor, user: user, role: :administrator)
     host! 'one.example.test'
   end
@@ -33,8 +33,8 @@ RSpec.describe Abera::AccountRouteIsolation do
     membership = neighbor.account_users.find_by!(user: user)
     original = membership.auto_offline
     post '/api/v1/profile/auto_offline', params: { profile: { account_id: neighbor.id, auto_offline: !original } },
-                                       headers: user.create_new_auth_token, as: :json,
-                                       env: { 'action_dispatch.show_exceptions' => :none }
+                                         headers: user.create_new_auth_token, as: :json,
+                                         env: { 'action_dispatch.show_exceptions' => :none }
     expect(response).to have_http_status(:not_found)
     expect(membership.reload.auto_offline).to eq(original)
   end

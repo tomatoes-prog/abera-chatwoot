@@ -16,7 +16,7 @@ RSpec.describe Abera::AccountSnapshot do
   let!(:message) { create(:message, account: account, conversation: conversation, inbox: conversation.inbox, content: 'Preserved message') }
   let!(:user) { create(:user, account: account, role: :administrator) }
 
-  it 'exports the account graph without including its neighbor' do
+  it 'exports the account graph without including its neighbor', :aggregate_failures do
     snapshot = described_class.new(account).export.deep_stringify_keys
     conversations = snapshot.fetch('tables').fetch('conversations')
     expect(conversations.map { |row| row.fetch('id') }).to eq([conversation.id])
@@ -25,7 +25,7 @@ RSpec.describe Abera::AccountSnapshot do
     expect(conversations).not_to include(hash_including('id' => neighbor_conversation.id))
   end
 
-  it 'restores references into a new account and retains display IDs and credentials' do
+  it 'restores references into a new account and retains display IDs and credentials', :aggregate_failures do
     bot = create(:agent_bot, account: account)
     bot_token = bot.access_token.token
     snapshot = JSON.parse(JSON.generate(described_class.new(account).export))
@@ -46,22 +46,22 @@ RSpec.describe Abera::AccountSnapshot do
     expect(neighbor.reload.conversations).to include(neighbor_conversation)
   end
 
-  it 'restores managed state, encrypted SMTP, usage and pending message references' do
+  it 'restores managed state, encrypted SMTP, usage and pending message references', :aggregate_failures do
     subscription = Abera::Subscription.create!(account: account, subscription_id: 'managed', customer_id: 'owner',
-                                              service_host: 'managed.example.test', tier: 'professional', state: 'active')
+                                               service_host: 'managed.example.test', tier: 'professional', state: 'active')
     subscription.usage_windows.create!(starts_at: subscription.cycle_start, conversations: 150)
     Abera::SmtpSetting.create!(account: account, address: 'smtp.example.test', username: 'owner', password: 'Private-password1!',
-                              sender: 'owner@example.test', port: 587, authentication: 'login', security: 'starttls')
+                               sender: 'owner@example.test', port: 587, authentication: 'login', security: 'starttls')
     subscription.durable_jobs.create!(job_class: 'SendReplyJob', deduplication_key: 'pending-message',
-                                     arguments: SendReplyJob.new(message.id).serialize, available_at: Time.current)
+                                      arguments: SendReplyJob.new(message.id).serialize, available_at: Time.current)
     subscription.durable_jobs.create!(job_class: 'ConversationReplyEmailJob', deduplication_key: 'pending-email',
-                                     arguments: ConversationReplyEmailJob.new(conversation.id, message.id).serialize, available_at: Time.current)
+                                      arguments: ConversationReplyEmailJob.new(conversation.id, message.id).serialize, available_at: Time.current)
     payload = Webhooks::TelegramEventsJob.new({ 'bot_token' => 'backup-bot', 'telegram' => { 'update_id' => 100 } }).serialize
     subscription.durable_jobs.create!(job_class: 'Webhooks::TelegramEventsJob', deduplication_key: Abera::JobIdentity.key(payload),
-                                     arguments: payload, state: 'completed', available_at: Time.current, completed_at: Time.current)
+                                      arguments: payload, state: 'completed', available_at: Time.current, completed_at: Time.current)
     subscription.durable_jobs.create!(job_class: 'Abera::SmtpTestJob', deduplication_key: 'failed-smtp-test',
-                                     arguments: Abera::SmtpTestJob.new(account.id, user.id).serialize, state: 'failed',
-                                     available_at: Time.current, attempts: 1, last_error: 'Net::SMTPAuthenticationError')
+                                      arguments: Abera::SmtpTestJob.new(account.id, user.id).serialize, state: 'failed',
+                                      available_at: Time.current, attempts: 1, last_error: 'Net::SMTPAuthenticationError')
     snapshot = JSON.parse(JSON.generate(described_class.new(account).export))
     Abera::RestoreCheck.new(snapshot).run do |restored|
       restored_subscription = restored.abera_subscription
@@ -86,7 +86,7 @@ RSpec.describe Abera::AccountSnapshot do
     Redis::Alfred.delete("abera:dispatch:#{subscription.id}") if subscription
   end
 
-  it 'reuses a shared user avatar when restoring into its original group' do
+  it 'reuses a shared user avatar when restoring into its original group', :aggregate_failures do
     AccountUser.create!(account: neighbor, user: user, role: :agent)
     with_modified_env(ABERA_MANAGED: 'false') do
       File.open(Rails.root.join('spec/assets/avatar.png')) do |file|
@@ -95,7 +95,7 @@ RSpec.describe Abera::AccountSnapshot do
     end
     avatar_id = user.avatar.blob.id
     subscription = Abera::Subscription.create!(account: account, subscription_id: 'avatar-restore', customer_id: 'owner',
-                                              service_host: 'avatar.example.test', tier: 'essential', state: 'quiescing')
+                                               service_host: 'avatar.example.test', tier: 'essential', state: 'quiescing')
     snapshot = JSON.parse(JSON.generate(described_class.new(account).export))
     restored = ApplicationRecord.transaction do
       Abera::AccountRemoval.new(subscription).run

@@ -7,7 +7,7 @@ class DeviseOverrides::PasswordsController < Devise::PasswordsController
   def create
     Current.account = Abera::Current.subscription.account if Abera.enabled? && Abera::Current.subscription
     @user = User.from_email(params[:email])
-    @user = nil if Abera.enabled? && @user && !@user.accounts.exists?(id: Current.account&.id)
+    @user = nil unless password_reset_allowed?(@user)
     @user&.send_reset_password_instructions
     build_response(I18n.t('messages.reset_password'), 200)
   end
@@ -17,9 +17,7 @@ class DeviseOverrides::PasswordsController < Devise::PasswordsController
     original_token = params[:reset_password_token]
     reset_password_token = Devise.token_generator.digest(self, :reset_password_token, original_token)
     @recoverable = User.find_by(reset_password_token: reset_password_token)
-    if Abera.enabled? && @recoverable && !@recoverable.accounts.exists?(id: Abera::Current.subscription&.account_id)
-      @recoverable = nil
-    end
+    @recoverable = nil unless password_reset_allowed?(@recoverable)
     if @recoverable && reset_password_and_confirmation(@recoverable)
       send_auth_headers(@recoverable)
       render partial: 'devise/auth', formats: [:json], locals: { resource: @recoverable }
@@ -29,6 +27,13 @@ class DeviseOverrides::PasswordsController < Devise::PasswordsController
   end
 
   private
+
+  def password_reset_allowed?(user)
+    return false unless user
+    return true unless Abera.enabled?
+
+    user.accounts.exists?(id: Abera::Current.subscription&.account_id)
+  end
 
   def reset_password_and_confirmation(recoverable)
     recoverable.confirm unless recoverable.confirmed? # confirm if user resets password without confirming anytime before

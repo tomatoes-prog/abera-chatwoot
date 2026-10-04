@@ -9,16 +9,16 @@ RSpec.describe Abera::MailerDelivery do
   before do
     [[account, 'one'], [neighbor, 'two']].each do |owner, name|
       Abera::Subscription.create!(account: owner, subscription_id: name, customer_id: "owner-#{name}",
-                                 service_host: "#{name}.example.test", tier: 'essential', state: 'active')
+                                  service_host: "#{name}.example.test", tier: 'essential', state: 'active')
       Abera::SmtpSetting.create!(account: owner, address: "smtp.#{name}.example.test", port: 587, username: name,
-                                password: "Private-#{name}-password1!", sender: "#{name}@example.test",
-                                authentication: 'login', security: 'starttls')
+                                 password: "Private-#{name}-password1!", sender: "#{name}@example.test",
+                                 authentication: 'login', security: 'starttls')
     end
   end
 
   after { Current.reset }
 
-  it 'uses each account SMTP and domain for password recovery despite another current account' do
+  it 'uses each account SMTP and domain for password recovery despite another current account', :aggregate_failures do
     Current.account = neighbor
     first = Devise.mailer.with(account: account).reset_password_instructions(user, 'first-token').message
     second = Devise.mailer.with(account: neighbor).reset_password_instructions(neighbor_user, 'second-token').message
@@ -32,14 +32,14 @@ RSpec.describe Abera::MailerDelivery do
     expect(first.delivery_method.settings[:openssl_verify_mode]).to eq('peer')
   end
 
-  it 'does not construct an outgoing authentication email before SMTP is configured' do
+  it 'does not construct an outgoing authentication email before SMTP is configured', :aggregate_failures do
     account.abera_smtp_setting.destroy!
     account.reload
     mail = Devise.mailer.with(account: account).reset_password_instructions(user, 'token').message
     expect(mail).to be_a(ActionMailer::Base::NullMail)
   end
 
-  it 'uses the explicit account SMTP when the same user belongs to two accounts' do
+  it 'uses the explicit account SMTP when the same user belongs to two accounts', :aggregate_failures do
     AccountUser.create!(account: neighbor, user: user, role: :agent)
     Current.account = neighbor
     mail = Devise.mailer.with(account: account).reset_password_instructions(user, 'shared-token').message

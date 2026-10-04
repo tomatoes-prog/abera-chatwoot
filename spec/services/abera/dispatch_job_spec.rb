@@ -3,11 +3,11 @@ require 'rails_helper'
 RSpec.describe Abera::DispatchJob do
   let(:first) do
     Abera::Subscription.create!(account: create(:account), subscription_id: 'first', customer_id: 'owner-first',
-                               service_host: 'first.example.test', tier: 'essential', state: 'active')
+                                service_host: 'first.example.test', tier: 'essential', state: 'active')
   end
   let(:second) do
     Abera::Subscription.create!(account: create(:account), subscription_id: 'second', customer_id: 'owner-second',
-                               service_host: 'second.example.test', tier: 'essential', state: 'active')
+                                service_host: 'second.example.test', tier: 'essential', state: 'active')
   end
 
   after do

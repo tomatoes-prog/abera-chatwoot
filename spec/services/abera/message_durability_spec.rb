@@ -4,7 +4,7 @@ RSpec.describe Abera::MessageDurability do
   let(:account) { create(:account) }
   let!(:subscription) do
     Abera::Subscription.create!(account: account, subscription_id: 'message-one', customer_id: 'owner-one',
-                               service_host: 'message.example.test', tier: 'essential', state: 'active')
+                                service_host: 'message.example.test', tier: 'essential', state: 'active')
   end
   let(:conversation) { create(:conversation, account: account) }
   let(:redis) { Redis.new(Redis::Config.app) }

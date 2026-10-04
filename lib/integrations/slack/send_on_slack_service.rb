@@ -202,7 +202,8 @@ class Integrations::Slack::SendOnSlackService < Base::SendOnChannelService
   end
 
   def link_to_conversation
-    "<#{ChatwootApp.frontend_url(account: message.account)}/app/accounts/#{conversation.account_id}/conversations/#{conversation.display_id}|Click here>"
+    "<#{ChatwootApp.frontend_url(account: message.account)}/app/accounts/#{conversation.account_id}" \
+      "/conversations/#{conversation.display_id}|Click here>"
   end
 
   # Determines whether the conversation identifier should be updated with the ts value.

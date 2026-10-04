@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Abera::TenantLock do
   let(:subscription) do
     Abera::Subscription.create!(account: create(:account), subscription_id: 'lock-one', customer_id: 'owner-one',
-                               service_host: 'lock.example.test', tier: 'essential', state: 'active')
+                                service_host: 'lock.example.test', tier: 'essential', state: 'active')
   end
 
   it 'holds off an exclusive lifecycle operation while allowing another subscription to proceed' do

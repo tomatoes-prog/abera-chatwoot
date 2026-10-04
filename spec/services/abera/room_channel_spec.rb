@@ -5,7 +5,7 @@ RSpec.describe RoomChannel, type: :channel do
   let(:user) { create(:user, account: account) }
   let(:managed) do
     Abera::Subscription.create!(account: account, subscription_id: 'cable-one', customer_id: 'owner',
-                               service_host: 'cable.example.test', tier: 'essential', state: 'active')
+                                service_host: 'cable.example.test', tier: 'essential', state: 'active')
   end
   let(:message) { { 'event' => 'message.created', 'data' => { 'account_id' => account.id } } }
 

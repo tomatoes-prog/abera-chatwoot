@@ -45,7 +45,7 @@ RSpec.describe Abera::TenantMiddleware do
 
   it 'rejects a blob from another subscription on both original and variant routes' do
     blob = ActiveStorage::Blob.create_before_direct_upload!(filename: 'private.txt', byte_size: 1, checksum: 'ndTkYSaMgDT1yFZOFVxnpg==',
-                                                           content_type: 'text/plain', metadata: { abera_subscription_id: 'sub-one' })
+                                                            content_type: 'text/plain', metadata: { abera_subscription_id: 'sub-one' })
     blob.update!(metadata: { abera_subscription_id: 'sub-two' })
     %w[blobs representations].each do |kind|
       path = "/rails/active_storage/#{kind}/redirect/#{blob.signed_id}/file.txt"

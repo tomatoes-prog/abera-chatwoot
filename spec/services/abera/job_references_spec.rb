@@ -17,7 +17,7 @@ RSpec.describe Abera::JobReferences do
   it 'remaps mention users and conversation and account identifiers' do
     arguments = [[10, 11], 20, 30]
     described_class.remap!('Conversations::UserMentionJob', arguments,
-                          { 'users' => { 10 => 110, 11 => 111 }, 'conversations' => { 20 => 120 }, 'accounts' => { 30 => 130 } })
+                           { 'users' => { 10 => 110, 11 => 111 }, 'conversations' => { 20 => 120 }, 'accounts' => { 30 => 130 } })
     expect(arguments).to eq([[110, 111], 120, 130])
   end
 
@@ -32,7 +32,7 @@ RSpec.describe Abera::JobReferences do
   it 'remaps bulk contact IDs while preserving labels and the requested action' do
     arguments = [10, 20, { 'ids' => ['30', 31], 'labels' => { 'add' => ['vip'] }, 'action_name' => 'delete' }]
     described_class.remap!('Contacts::BulkActionJob', arguments,
-                          { 'accounts' => { 10 => 110 }, 'users' => { 20 => 120 }, 'contacts' => { 30 => 130, 31 => 131 } })
+                           { 'accounts' => { 10 => 110 }, 'users' => { 20 => 120 }, 'contacts' => { 30 => 130, 31 => 131 } })
     expect(arguments).to eq([110, 120, { 'ids' => [130, 131], 'labels' => { 'add' => ['vip'] }, 'action_name' => 'delete' }])
   end
 

@@ -5,7 +5,6 @@ require 'stringio'
 RSpec.describe Abera::AccountRestore do
   let(:account) { create(:account) }
   let!(:conversation) { create(:conversation, account: account) }
-  let!(:message) { create(:message, account: account, conversation: conversation, inbox: conversation.inbox, content: 'Restore this message') }
   let!(:user) { create(:user, account: account, role: :administrator) }
   let(:neighbor) { create(:account) }
   let!(:neighbor_conversation) { create(:conversation, account: neighbor) }
@@ -28,11 +27,11 @@ RSpec.describe Abera::AccountRestore do
       'accountId' => '123456789012', 'region' => 'us-east-2', 'compatibilityGeneration' => 'chatwoot-ce-pg16-v1',
       'verified' => true, 'restoreTested' => true, 'backupId' => 'backup-one',
       'artifacts' => objects.transform_values.with_index do |body, index|
-        { 'key' => prefix + index.to_s, 'versionId' => "version-#{index}", 'sha256' => Digest::SHA256.hexdigest(body) }
+        { 'key' => "#{prefix}#{index}", 'versionId' => "version-#{index}", 'sha256' => Digest::SHA256.hexdigest(body) }
       end }
   end
   let(:receipt) do
-    manifest.merge('bucket' => 'private-backups', 'manifestKey' => prefix + 'manifest.json', 'manifestVersionId' => 'manifest-version',
+    manifest.merge('bucket' => 'private-backups', 'manifestKey' => "#{prefix}manifest.json", 'manifestVersionId' => 'manifest-version',
                    'manifestSha256' => Digest::SHA256.hexdigest(JSON.generate(manifest)))
   end
   let(:command) do
@@ -47,12 +46,13 @@ RSpec.describe Abera::AccountRestore do
   end
 
   before do
+    create(:message, account: account, conversation: conversation, inbox: conversation.inbox, content: 'Restore this message')
     storage.stub_responses(:get_object, [{ body: JSON.generate(manifest) }, { body: database },
                                          { body: objects.fetch('applicationSecrets') }, { body: '[]' }])
     allow(Aws::S3::Client).to receive(:new).and_return(storage)
   end
 
-  it 'restores just the selected account, preserving credentials, display IDs and its host' do
+  it 'restores just the selected account, preserving credentials, display IDs and its host', :aggregate_failures do
     original_id = account.id
     display_id = conversation.display_id
     password = user.encrypted_password
@@ -70,10 +70,14 @@ RSpec.describe Abera::AccountRestore do
     expect(storage.api_requests.count { |request| request[:operation_name] == :get_object }).to eq(4)
   end
 
-  it 'rolls back account removal and import when restoring the graph fails' do
-    allow_any_instance_of(Abera::AccountImport).to receive(:restore!).and_wrap_original do |original|
-      original.call
-      raise 'Import verification failed'
+  it 'rolls back account removal and import when restoring the graph fails', :aggregate_failures do
+    allow(Abera::AccountImport).to receive(:new).and_wrap_original do |constructor, *arguments|
+      constructor.call(*arguments).tap do |importer|
+        allow(importer).to receive(:restore!).and_wrap_original do |restore|
+          restore.call
+          raise 'Import verification failed'
+        end
+      end
     end
     expect { Abera::Administration.new(command).run }.to raise_error(RuntimeError, 'Import verification failed')
     expect(account.reload.conversations).to include(conversation)
@@ -82,7 +86,7 @@ RSpec.describe Abera::AccountRestore do
     expect(neighbor.reload.conversations).to include(neighbor_conversation)
   end
 
-  it 'rejects corruption before removing source data' do
+  it 'rejects corruption before removing source data', :aggregate_failures do
     storage.stub_responses(:get_object, [{ body: JSON.generate(manifest) }, { body: 'corrupted-database' }])
     expect { Abera::Administration.new(command).run }.to raise_error(RuntimeError, 'Backup checksum mismatch')
     expect(account.reload.conversations).to include(conversation)

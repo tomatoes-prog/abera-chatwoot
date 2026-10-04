@@ -14,7 +14,7 @@ RSpec.describe Abera::RateLimit do
   it 'accepts exactly the configured number of requests under concurrent Redis increments' do
     freeze_time do
       decisions = Queue.new
-      workers = 4.times.map do
+      workers = Array.new(4) do
         Thread.new { 20.times { decisions << described_class.allowed?(subscription, 'requests', 60) } }
       end
       workers.each(&:value)
