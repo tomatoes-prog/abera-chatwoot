@@ -21,7 +21,7 @@ RSpec.describe Abera::FacebookDeliveryIsolation do
     create(:contact_inbox, inbox: inbox, contact: own_conversation.contact, source_id: 'shared-sender')
     Abera::Current.subscription = subscription
     parser = instance_double(Integrations::Facebook::MessageParser, sender_id: 'shared-sender', recipient_id: channel.page_id,
-                                                                  delivery_watermark: 100, read_watermark: nil)
+                                                                    delivery_watermark: 100, read_watermark: nil)
     expect(Conversations::UpdateMessageStatusJob).to receive(:perform_later).with(own_conversation.id, anything, :delivered)
     Integrations::Facebook::DeliveryStatus.new(params: parser).perform
   end
