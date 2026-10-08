@@ -11,7 +11,8 @@ RSpec.describe Abera::GroupBackup do
   around do |example|
     with_modified_env(ABERA_GROUP_ID: '0123456789abcdef', ABERA_TIER: 'lite', ABERA_GROUP_RECOVERY_MODE: 'offline',
                       ABERA_OPERATION_BUCKET: 'private-backups', S3_BUCKET_NAME: 'private-files',
-                      ABERA_DATA_KEY_ARN: 'arn:aws:kms:us-east-2:123456789012:key/test') { example.run }
+                      ABERA_DATA_KEY_ARN: 'arn:aws:kms:us-east-2:123456789012:key/test',
+                      SECRET_KEY_BASE: 'test-only-group-backup-secret-key-base') { example.run }
   end
 
   before do
