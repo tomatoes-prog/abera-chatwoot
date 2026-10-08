@@ -25,6 +25,9 @@ if command.fetch('action') == 'MIGRATE'
   end
 elsif command.fetch('action') == 'BACKUP'
   result = Abera::AccountBackup.new(command).run
+  result['groupBackup'] = Abera::GroupBackup.new(command).run if ENV.fetch('ABERA_TIER') == 'lite'
+elsif command.fetch('action') == 'GROUP_RESTORE'
+  result = Abera::GroupRestore.new(command).run
 else
   result = Abera::Administration.new(command).run
 end
