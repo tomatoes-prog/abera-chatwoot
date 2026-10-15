@@ -86,6 +86,8 @@ jobs:
             --entrypoint cat "$reference" /app/.git_sha)" = "$GITHUB_SHA"
           docker run --rm --platform linux/arm64 --entrypoint sh "$reference" \
             -c 'test "$CW_EDITION" = "ce" && test "$DISABLE_ENTERPRISE" = "true" && test "$(id -u)" = "1000" && test -s /app/.git_sha && test -s /app/LICENSE && test ! -d /app/enterprise && test ! -d /app/spec/enterprise'
+          docker run --rm --platform linux/arm64 --entrypoint pg_dump "$reference" --version | grep -E '^pg_dump \(PostgreSQL\) 16\.'
+          docker run --rm --platform linux/arm64 --entrypoint pg_restore "$reference" --version | grep -E '^pg_restore \(PostgreSQL\) 16\.'
 
       - name: Record immutable release evidence
         env:

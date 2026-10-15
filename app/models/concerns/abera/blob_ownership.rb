@@ -2,18 +2,25 @@ module Abera::BlobOwnership
   extend ActiveSupport::Concern
 
   included do
+    before_validation :abera_assign_blob_owner, on: :create
     before_create :abera_reserve_blob
     after_destroy :abera_release_blob
   end
 
   private
 
+  def abera_assign_blob_owner
+    subscription = Abera::Current.subscription || Current.account&.abera_subscription
+    return unless Abera.enabled? && subscription && !Abera::Current.administrative_operation
+
+    self.metadata = metadata.merge('abera_subscription_id' => subscription.subscription_id)
+  end
+
   def abera_reserve_blob
     subscription = Abera::Current.subscription || Current.account&.abera_subscription
     return unless Abera.enabled? && subscription && !Abera::Current.administrative_operation
 
     Abera::Quota.reserve_storage!(subscription, byte_size)
-    self.metadata = metadata.merge('abera_subscription_id' => subscription.subscription_id)
     self.key = "subscriptions/#{subscription.subscription_id}/#{key || self.class.generate_unique_secure_token}"
   end
 
