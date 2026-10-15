@@ -86,6 +86,30 @@ RSpec.describe Abera::AccountSnapshot do
     Redis::Alfred.delete("abera:dispatch:#{subscription.id}") if subscription
   end
 
+  it 'restores multiple owned rows with the executor query cache enabled', :aggregate_failures do
+    conversation.inbox.working_hours.delete_all
+    [1, 2].each do |day|
+      conversation.inbox.working_hours.create!(day_of_week: day, open_hour: 9, open_minutes: 0, close_hour: 17, close_minutes: 0)
+    end
+    neighbor_hours = WorkingHour.where(account_id: neighbor.id).pluck(:id, :inbox_id, :account_id)
+    subscription = Abera::Subscription.create!(account: account, subscription_id: 'cached-restore', customer_id: 'owner',
+                                               service_host: 'cached.example.test', tier: 'essential', state: 'quiescing')
+    snapshot = JSON.parse(JSON.generate(described_class.new(account).export))
+    restored = ApplicationRecord.connection.cache do
+      ApplicationRecord.transaction do
+        Abera::AccountRemoval.new(subscription).run
+        Abera::AccountImport.new(snapshot).restore!
+      end
+    end
+    expect(restored.id).not_to eq(account.id)
+    restored_conversation = restored.conversations.find_by!(display_id: conversation.display_id)
+    expect(restored_conversation.inbox.working_hours.order(:day_of_week).pluck(:day_of_week)).to eq([1, 2])
+    expect(restored_conversation.inbox.working_hours.pluck(:account_id).uniq).to eq([restored.id])
+    expect(restored.conversations.find_by!(display_id: conversation.display_id).messages.first.content).to eq('Preserved message')
+    expect(WorkingHour.where(account_id: neighbor.id).pluck(:id, :inbox_id, :account_id)).to eq(neighbor_hours)
+    expect(neighbor.reload.conversations).to include(neighbor_conversation)
+  end
+
   it 'reuses a shared user avatar when restoring into its original group', :aggregate_failures do
     AccountUser.create!(account: neighbor, user: user, role: :agent)
     with_modified_env(ABERA_MANAGED: 'false') do

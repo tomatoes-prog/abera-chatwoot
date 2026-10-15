@@ -154,7 +154,9 @@ class Abera::AccountImport
     sequence = connection.select_value("SELECT pg_get_serial_sequence(#{connection.quote(model.table_name)}, #{connection.quote(model.primary_key)})")
     raise "Missing primary key sequence: #{model.table_name}" unless sequence
 
-    connection.select_value("SELECT nextval(#{connection.quote(sequence)})").to_i
+    # Rails can cache SELECT nextval inside its executor. Every reservation must
+    # reach PostgreSQL, including repeated reservations for the same table.
+    connection.uncached { connection.select_value("SELECT nextval(#{connection.quote(sequence)})").to_i }
   end
 
   def dependencies(table)
@@ -175,6 +177,8 @@ class Abera::AccountImport
       next if @reused.include?([table, target_id])
 
       attributes = import_attributes(model, source, target_id)
+      # Some owned tables (including working_hours) have no belongs_to :account.
+      attributes['account_id'] = @mapping.fetch('accounts').fetch(source['account_id']) if source['account_id']
       # Restore exact stored values without callbacks that send messages or generate new channel tokens.
       # rubocop:disable Rails/SkipsModelValidations
       model.insert_all!([attributes])

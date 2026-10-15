@@ -41,7 +41,9 @@ class Abera::RestoreCheck
     ActiveRecord::Migration.suppress_messages { load Rails.root.join('db/schema.rb') }
     ActiveRecord::Migration.suppress_messages { ApplicationRecord.connection.migration_context.migrate }
     importer = Abera::AccountImport.new(@snapshot, blob_prefix: "verification/#{@database}")
-    importer.restore!
+    # A new verification pool otherwise skips the query cache enabled by the
+    # real Rails executor. Exercise the same conditions before accepting a backup.
+    ApplicationRecord.connection.cache { importer.restore! }
     importer
   end
 

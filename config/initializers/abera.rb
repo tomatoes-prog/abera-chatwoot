@@ -19,6 +19,7 @@ Rails.application.config.to_prepare do
   Conversation.include Abera::ConversationQuota
   AccountUser.include Abera::AgentQuota
   User.prepend Abera::UserIsolation
+  Attachment.prepend Abera::AttachmentUrls
   Message.include Abera::MessageQuota
   Message.prepend Abera::MessageDurability
   ActiveSupport.on_load(:active_storage_blob) { include Abera::BlobOwnership }
